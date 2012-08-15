@@ -1,27 +1,60 @@
 #!/bin/bash
-# Usage $1 albumname
-# Usage $2 path to folder
 
-#functions
+doResize=false;
 
-album_name=$1
-full_path=$2
+while getopts ':f:t:r' OPTION ; do
+  case "$OPTION" in
+  	f)	full_path="$OPTARG";;
+		t)	album_name="$OPTARG";;
+		r)	doResize=true;;
+		*)	echo "unknown Parameter"
+	esac
+done
+
+#  test to see if they path is set probably
+if [ "x" == "x$full_path" ]; then
+		echo "-f [option] is required"
+		exit
+fi
+if [ ! -d "$full_path" ]; then
+		echo "-f [option] is not a valid Directory"
+		exit
+fi
 
 cd $full_path
-mkdir upload
 
-num_images=0
-for f in *.JPG
- do
-  echo "Processing $f file..."
-  convert "$f" -resize 2048 "upload/${f}"
-  echo "Resized $f file..."
-  num_images=`expr $num_images + 1`;
- done
-echo "---------------------------"
-echo "Resized $num_images file/s"
+if [[ "x" == "x$album_name" ]]; then
+	album_name=${PWD##*/}
+fi
+
+if $doResize
+	then
+  	mkdir upload
+		num_images=0
+    for f in *.JPG
+    	do
+				convert "$f" -resize 2048 "upload/${f}"
+				echo "Resized $f file..."
+				num_images=`expr $num_images + 1`;
+			done
+		echo "Resized $num_images file/s"
+fi
+
 echo "Start with Upload"
+
+if $doResize
+	then
+		google picasa create --title="$album_name" upload/*
+	else
+		google picasa create --title="$album_name" *
+fi
+
 echo "---------------------------"
-google picasa create --title="$1" upload/*
+echo "FINISH"
+echo "---------------------------"
 
 #tidy up
+if $doResize
+	then
+		rm -r upload
+fi
