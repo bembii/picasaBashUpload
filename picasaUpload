@@ -1,0 +1,27 @@
+#!/bin/bash
+# Usage $1 albumname
+# Usage $2 path to folder
+
+#functions
+
+album_name=$1
+full_path=$2
+
+cd $full_path
+mkdir upload
+
+num_images=0
+for f in *.JPG
+ do
+  echo "Processing $f file..."
+  convert "$f" -resize 2048 "upload/${f}"
+  echo "Resized $f file..."
+  num_images=`expr $num_images + 1`;
+ done
+echo "---------------------------"
+echo "Resized $num_images file/s"
+echo "Start with Upload"
+echo "---------------------------"
+google picasa create --title="$1" upload/*
+
+#tidy up
